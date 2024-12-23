@@ -18,6 +18,7 @@ void eat(t_philo *philo)
     pthread_mutex_lock(&philo->second_fork->fork);
     print_status(TAKE_SECOND_FORK, philo);
 
+
     //update last meal time
     set_long(&philo->philo_mutx, &philo->last_meal_time, get_time_milli());
     philo->meal_counter++;
