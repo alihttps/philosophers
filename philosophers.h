@@ -52,6 +52,8 @@ typedef struct s_table
     long start_of_simulation;
     bool ready_to_sync;
     bool end_of_simulation;
+    long threads_running_count;
+    pthread_t monitor;
     pthread_mutex_t table_mutx;
     pthread_mutex_t write_mutx;
     t_fork *forks;
@@ -59,12 +61,15 @@ typedef struct s_table
 
 } t_table;
 
+void parse_input (char **av);
+
 ////////////setters_getters////////////
 void set_bool(pthread_mutex_t *mtx, bool *dest, bool value);
 bool get_bool(pthread_mutex_t *mtx, bool *value);
 void set_long(pthread_mutex_t *mtx, long *dest, long value);
 bool simulation_ended(t_table *table);
-bool get_long(pthread_mutex_t *mtx, long *value);
+long get_long(pthread_mutex_t *mtx, long *value);
+void increment_long (pthread_mutex_t *mtx, long *value);
 
 /////////////time////////////////
 long get_time_sec ();
@@ -74,5 +79,9 @@ long get_time_micro ();
 void print_status(philo_status stat, t_philo *philo);
 
 long ft_atol(char *av);
+
+void *monitor_dinner(void *data);
+
+void clean_table (t_table *table);
 
 #endif

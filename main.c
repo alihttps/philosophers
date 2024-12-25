@@ -1,9 +1,22 @@
 #include "philosophers.h"
 
+
 void wait_all_threads(t_table *table)
 {
     while (!get_bool(&table->table_mutx, &table->ready_to_sync))
         ;
+}
+void *loner (void *data)
+{
+    t_philo *philo = (t_philo *)data;
+
+    wait_all_threads(philo->table);
+    set_long(&philo->philo_mutx, &philo->last_meal_time, get_time_milli());
+    increment_long(&philo->table->table_mutx, &philo->table->threads_running_count);
+    print_status(TAKE_FIRST_FORK, philo);
+    while (!simulation_ended(philo->table))
+        usleep(200);
+    return NULL;
 }
 
 void think (t_philo *philo)
@@ -17,7 +30,6 @@ void eat(t_philo *philo)
     print_status(TAKE_FIRST_FORK, philo);
     pthread_mutex_lock(&philo->second_fork->fork);
     print_status(TAKE_SECOND_FORK, philo);
-
 
     //update last meal time
     set_long(&philo->philo_mutx, &philo->last_meal_time, get_time_milli());
@@ -38,6 +50,10 @@ void *dinner_simulation (void *data)
 
     wait_all_threads(philo->table);
 
+    set_long(&philo->philo_mutx, &philo->last_meal_time, get_time_milli());
+
+    increment_long(&philo->table->table_mutx, &philo->table->threads_running_count);
+
     while (!simulation_ended(philo->table))
     {
         //eat
@@ -57,7 +73,7 @@ void start_dinner (t_table *table)
     if (table->num_of_meals == 0)
         return;
     else if (table->philo_number == 1)
-        ;//todo
+        pthread_create(&table->philos[0].thread_id, NULL, loner, &table->philos[0]);
     else
     {
         while (i < table->philo_number)
@@ -66,6 +82,8 @@ void start_dinner (t_table *table)
             i++;
         }
     }
+    //monitor
+    pthread_create(&table->monitor, NULL, monitor_dinner, table);
     table->start_of_simulation = get_time_milli();
     set_bool(&table->table_mutx, &table->ready_to_sync, true);
     i = 0;
@@ -74,6 +92,14 @@ void start_dinner (t_table *table)
         pthread_join(table->philos[i].thread_id, NULL);
         i++;
     }
+    i = 0;
+    while (i < table->philo_number)
+    {
+        printf ("%d is full ------> %d\n", table->philos[i].id, table->philos[0].full);
+        i++;
+    }
+    pthread_join(table->monitor, NULL);
+    set_bool(&table->table_mutx, &table->end_of_simulation, true);
 }
 
 void assign_forks (t_philo *philo, t_fork *fork, int position)
@@ -108,6 +134,7 @@ void init_table(t_table *table)
 {
     table->end_of_simulation = false;
     table->ready_to_sync = false;
+    table->threads_running_count = 0;
     table->philos = malloc (sizeof(t_philo) * table->philo_number);
     table->forks = malloc (sizeof(t_fork) * table->philo_number);
     pthread_mutex_init(&table->table_mutx, NULL);
@@ -141,10 +168,11 @@ int main (int ac, char **av)
     t_table table;
     if (ac == 5 || ac == 6)
     {
+        parse_input(av);
         fill_table(&table, av);
         init_table(&table);
         start_dinner (&table);
-        // clean_table(&table);
+        clean_table(&table);
     }
     else
         printf ("error\n");

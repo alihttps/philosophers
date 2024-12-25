@@ -1,6 +1,6 @@
 CC = cc
-SRCS = main.c setter_getter.c time.c utils.c write.c
-CFLAGS= -Wall -Wextra -Werror 
+SRCS = main.c setter_getter.c time.c write.c parse.c monitoring.c clean.c
+CFLAGS= -Wall -Wextra -Werror -fsanitize=address -g
 
 NAME = philo
 

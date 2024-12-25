@@ -23,7 +23,7 @@ void set_long(pthread_mutex_t *mtx, long *dest, long value)
     *dest = value;
     pthread_mutex_unlock(mtx);
 }
-bool get_long(pthread_mutex_t *mtx, long *value)
+long get_long(pthread_mutex_t *mtx, long *value)
 {
     long val;
 
@@ -31,6 +31,13 @@ bool get_long(pthread_mutex_t *mtx, long *value)
     val = *value;
     pthread_mutex_unlock(mtx);
     return val;
+}
+
+void increment_long (pthread_mutex_t *mtx, long *value)
+{
+    pthread_mutex_lock(mtx);
+    (*value)++;
+    pthread_mutex_unlock(mtx);
 }
 
 bool simulation_ended(t_table *table)
