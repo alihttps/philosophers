@@ -1,5 +1,16 @@
 #include "philosophers.h"
 
+void think(t_philo *philo, bool before_sim);
+
+void de_synchronise(t_philo *philo)
+{
+    if (philo->table->philo_number % 2 == 0)
+    {
+        precise_usleep(3e4, philo->table);
+    }
+    else
+        think(philo, true);
+}
 
 void wait_all_threads(t_table *table)
 {
@@ -19,9 +30,23 @@ void *loner (void *data)
     return NULL;
 }
 
-void think (t_philo *philo)
+void think (t_philo *philo, bool before_sim)
 {
-    print_status(THINKING, philo);
+    long t_eat;
+    long t_sleep;
+    long t_think;
+
+    if (!before_sim)
+        print_status(THINKING, philo);
+    if (philo->table->philo_number % 2 == 0)
+        return;
+    t_eat = philo->table->time_to_eat;
+    t_sleep = philo->table->time_to_sleep;
+    t_think = t_eat * 2 - t_sleep;
+    if (t_think < 0)
+        t_think = 0;
+    precise_usleep(t_think * 0.42 , philo->table);
+    
 }
 
 void eat(t_philo *philo)
@@ -33,9 +58,11 @@ void eat(t_philo *philo)
 
     //update last meal time
     set_long(&philo->philo_mutx, &philo->last_meal_time, get_time_milli());
-    philo->meal_counter++;
+    if (!simulation_ended(philo->table))
+        philo->meal_counter++;
+
     print_status(EATING, philo);
-    usleep(philo->table->time_to_eat);
+    precise_usleep(philo->table->time_to_eat, philo->table);
     if (philo->table->num_of_meals > 0 && philo->meal_counter == philo->table->num_of_meals)
     {
         set_bool(&philo->philo_mutx, &philo->full, true);
@@ -54,15 +81,14 @@ void *dinner_simulation (void *data)
 
     increment_long(&philo->table->table_mutx, &philo->table->threads_running_count);
 
+    de_synchronise(philo);
+
     while (!simulation_ended(philo->table))
     {
-        //eat
         eat(philo);
-        //sleep
         print_status(SLEEPING, philo);
-        usleep(philo->table->time_to_sleep);
-        //think
-        think(philo);
+        precise_usleep(philo->table->time_to_sleep, philo->table);
+        think(philo, false);
     }
     return NULL;
 }
@@ -93,11 +119,6 @@ void start_dinner (t_table *table)
         i++;
     }
     i = 0;
-    while (i < table->philo_number)
-    {
-        printf ("%d is full ------> %d\n", table->philos[i].id, table->philos[0].full);
-        i++;
-    }
     pthread_join(table->monitor, NULL);
     set_bool(&table->table_mutx, &table->end_of_simulation, true);
 }
@@ -135,6 +156,7 @@ void init_table(t_table *table)
     table->end_of_simulation = false;
     table->ready_to_sync = false;
     table->threads_running_count = 0;
+    table->full_count = 0;
     table->philos = malloc (sizeof(t_philo) * table->philo_number);
     table->forks = malloc (sizeof(t_fork) * table->philo_number);
     pthread_mutex_init(&table->table_mutx, NULL);
@@ -149,14 +171,27 @@ void init_table(t_table *table)
     philo_init (table);
 }
 
-void fill_table (t_table *table, char **av)
+void fill_table (t_table *table, int ac, char **av)
 {
+    int i = 1;
+    while (i < ac)
+    {
+        if (ft_atol(av[i]) < 0)
+        {
+            printf ("not a valid value\n");
+            exit(EXIT_FAILURE);
+        }
+        i++;
+    }
     table->philo_number = ft_atol(av[1]);
     table->time_to_die = ft_atol(av[2]) * 1e3;
     table->time_to_eat =ft_atol(av[3]) * 1e3;
     table->time_to_sleep = ft_atol(av[4]) * 1e3;
     if (table->time_to_die < 6e4 || table->time_to_eat < 6e4 || table->time_to_sleep < 6e4)
+    {
         printf ("use values larger than 60ms\n");
+        exit(EXIT_FAILURE);
+    }
     if (av[5])
         table->num_of_meals = atol(av[5]);
     else
@@ -168,12 +203,14 @@ int main (int ac, char **av)
     t_table table;
     if (ac == 5 || ac == 6)
     {
-        parse_input(av);
-        fill_table(&table, av);
+        if (!valid_input(ac, av))
+            return(EXIT_FAILURE);
+        fill_table(&table, ac, av);
         init_table(&table);
         start_dinner (&table);
         clean_table(&table);
     }
     else
         printf ("error\n");
+    return 0;
 }

@@ -1,11 +1,11 @@
 #include "philosophers.h"
 
-static int	ft_isspace(char c)
-{
-	if ((c >= 9 && c <= 13) || c == 32)
-		return (1);
-	return (0);
-}
+// static int	ft_isspace(char c)
+// {
+// 	if ((c >= 9 && c <= 13) || c == 32)
+// 		return (1);
+// 	return (0);
+// }
 int is_digit(char c)
 {
     return (c >= '0' && c <= '9');
@@ -32,24 +32,44 @@ void parse_input (char **av)
 
 long	ft_atol(char *str)
 {
-	long long		result;
-	int				sign;
+	unsigned long long int	nb;
+	int						i;
 
-	result = 0;
-	sign = 1;
-	while (ft_isspace(*str))
-		str++;
-	if (*str == '+')
-		str++;
-	else if (*str == '-')
+	i = 0;
+	nb = 0;
+	while (str[i] && (str[i] >= '0' && str[i] <= '9'))
 	{
-		str++;
-		sign = -1;
+		nb = nb * 10 + (str[i] - '0');
+		i++;
 	}
-	while (*str >= '0' && *str <= '9')
+	if (nb > INT_MAX)
+		return (-1);
+	return ((int)nb);
+}
+bool	only_digits(char *str)
+{
+	int	i;
+
+	i = 0;
+	while (str[i])
 	{
-		result = (result * 10) + *str - '0';
-		str++;
+		if (str[i] < '0' || str[i] > '9')
+			return (false);
+		i++;
 	}
-	return (long)(sign * result);
+	return (true);
+}
+
+bool valid_input(int ac , char **av)
+{
+	int i = 1;
+	while (i < ac)
+	{
+		if (!only_digits(av[i]))
+		{
+			return (printf("only digits\n"), false);
+		}
+		i++;
+	}
+	return true;
 }

@@ -31,7 +31,7 @@ typedef struct s_fork
 typedef struct s_philo
 {
     int id;
-    int meal_counter;
+    long meal_counter;
     bool full;
     long last_meal_time;
     pthread_mutex_t philo_mutx;
@@ -44,6 +44,7 @@ typedef struct s_philo
 
 typedef struct s_table
 {
+    long full_count;
     long num_of_meals;
     long philo_number;
     long time_to_die;
@@ -83,5 +84,9 @@ long ft_atol(char *av);
 void *monitor_dinner(void *data);
 
 void clean_table (t_table *table);
+
+void precise_usleep(long usec, t_table *table);
+
+bool valid_input(int ac , char **av);
 
 #endif
