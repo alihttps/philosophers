@@ -1,6 +1,6 @@
 CC = cc
 SRCS = main.c setter_getter.c time.c write.c parse.c monitoring.c clean.c
-CFLAGS= -Wall -Wextra -Werror -fsanitize=thread -pthread -g
+CFLAGS= -Wall -Wextra -Werror #-fsanitize=thread -pthread -g
 
 NAME = philo
 

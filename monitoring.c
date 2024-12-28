@@ -47,8 +47,8 @@ void *monitor_dinner(void *data)
             }
             if (table->num_of_meals > 0 && table->full_count == table->philo_number)
             {
-                printf ("num of meals ----> %ld\n", table->num_of_meals);
-                printf ("full count ------> %ld\n", table->full_count);
+                // printf ("num of meals ----> %ld\n", table->num_of_meals);
+                // printf ("full count ------> %ld\n", table->full_count);
                 set_bool(&table->table_mutx, &table->end_of_simulation, true);
             }
             i++; 

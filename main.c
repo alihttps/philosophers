@@ -6,7 +6,14 @@ void de_synchronise(t_philo *philo)
 {
     if (philo->table->philo_number % 2 == 0)
     {
-        precise_usleep(3e4, philo->table);
+        // Scale delay inversely with number of philosophers
+        // For 200 philos: 1e4 = 10ms delay
+        // For 100 philos: 2e4 = 20ms delay
+        // For 50 philos: 3e4 = 30ms delay
+        long delay = (3e4 * 50) / philo->table->philo_number;
+        if (delay < 5e3)  // minimum 5ms delay
+            delay = 5e3;
+        precise_usleep(delay, philo->table);
     }
     else
         think(philo, true);
@@ -24,6 +31,7 @@ void *loner (void *data)
     wait_all_threads(philo->table);
     set_long(&philo->philo_mutx, &philo->last_meal_time, get_time_milli());
     increment_long(&philo->table->table_mutx, &philo->table->threads_running_count);
+    set_long(&philo->philo_mutx, &philo->table->start_of_simulation, get_time_milli());
     print_status(TAKE_FIRST_FORK, philo);
     while (!simulation_ended(philo->table))
         usleep(200);
@@ -36,16 +44,16 @@ void think (t_philo *philo, bool before_sim)
     long t_sleep;
     long t_think;
 
-    if (!before_sim)
+    if (before_sim)
         print_status(THINKING, philo);
-    if (philo->table->philo_number % 2 == 0)
-        return;
+    // if (philo->table->philo_number % 2 == 0)
+    //     return;
     t_eat = philo->table->time_to_eat;
     t_sleep = philo->table->time_to_sleep;
     t_think = t_eat * 2 - t_sleep;
     if (t_think < 0)
         t_think = 0;
-    precise_usleep(t_think * 0.42 , philo->table);
+    precise_usleep(t_think * 0.50, philo->table);
     
 }
 
@@ -59,7 +67,10 @@ void eat(t_philo *philo)
     //update last meal time
     set_long(&philo->philo_mutx, &philo->last_meal_time, get_time_milli());
     if (!simulation_ended(philo->table))
-        philo->meal_counter++;
+    {
+        int i = philo->meal_counter + 1;
+        set_long(&philo->philo_mutx,&philo->meal_counter, i);
+    }
 
     print_status(EATING, philo);
     precise_usleep(philo->table->time_to_eat, philo->table);
@@ -81,8 +92,7 @@ void *dinner_simulation (void *data)
 
     increment_long(&philo->table->table_mutx, &philo->table->threads_running_count);
 
-    de_synchronise(philo);
-
+    set_long(&philo->philo_mutx, &philo->table->start_of_simulation, get_time_milli());
     while (!simulation_ended(philo->table))
     {
         eat(philo);
@@ -110,7 +120,6 @@ void start_dinner (t_table *table)
     }
     //monitor
     pthread_create(&table->monitor, NULL, monitor_dinner, table);
-    table->start_of_simulation = get_time_milli();
     set_bool(&table->table_mutx, &table->ready_to_sync, true);
     i = 0;
     while (i < table->philo_number)

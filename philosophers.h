@@ -37,6 +37,7 @@ typedef struct s_philo
     pthread_mutex_t philo_mutx;
     t_fork *first_fork;
     t_fork *second_fork;
+    // forks[number philo];
     pthread_t thread_id;
     t_table *table;
 
