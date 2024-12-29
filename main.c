@@ -2,16 +2,14 @@
 
 void think(t_philo *philo, bool before_sim);
 
+//note to tmrw last meal time isnt being updated properly
+
 void de_synchronise(t_philo *philo)
 {
     if (philo->table->philo_number % 2 == 0)
     {
-        // Scale delay inversely with number of philosophers
-        // For 200 philos: 1e4 = 10ms delay
-        // For 100 philos: 2e4 = 20ms delay
-        // For 50 philos: 3e4 = 30ms delay
         long delay = (3e4 * 50) / philo->table->philo_number;
-        if (delay < 5e3)  // minimum 5ms delay
+        if (delay < 5e3)
             delay = 5e3;
         precise_usleep(delay, philo->table);
     }
@@ -118,6 +116,7 @@ void start_dinner (t_table *table)
             i++;
         }
     }
+    de_synchronise(table->philos);
     //monitor
     pthread_create(&table->monitor, NULL, monitor_dinner, table);
     set_bool(&table->table_mutx, &table->ready_to_sync, true);
