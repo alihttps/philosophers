@@ -25,24 +25,34 @@ long get_time_micro ()
 }
 
 
-void precise_usleep(long usec, t_table *table) 
-{
-    long start = get_time_micro();
-    long elapsed;
-    long rem;
+// void precise_usleep(long usec, t_table *table) 
+// {
+//     long start = get_time_micro();
+//     long elapsed;
+//     long rem;
 
-    while (get_time_micro() - start < usec)
-    {
-        if (simulation_ended(table))
-            break;
-        elapsed = get_time_micro() - start;
-        rem = usec - elapsed;
-        if (rem > 1e3)
-            usleep(rem / 2);
-        else
-        {
-            while (get_time_micro() - start < usec)
-                ;
-        }
-    }
+//     while (get_time_micro() - start < usec)
+//     {
+//         if (simulation_ended(table))
+//             break;
+//         elapsed = get_time_micro() - start;
+//         rem = usec - elapsed;
+//         if (rem > 1e3)
+//             usleep(rem / 2);
+//         else
+//         {
+//             while (get_time_micro() - start < usec)
+//                 ;
+//         }
+//     }
+// }
+
+int	precise_usleep(size_t milliseconds)
+{
+	size_t	start;
+
+	start = get_time_milli();
+	while ((get_time_milli() - start) < milliseconds)
+		usleep(500);
+	return (0);
 }

@@ -86,7 +86,7 @@ void *monitor_dinner(void *data);
 
 void clean_table (t_table *table);
 
-void precise_usleep(long usec, t_table *table);
+int	precise_usleep(size_t milliseconds);
 
 bool valid_input(int ac , char **av);
 

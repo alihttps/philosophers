@@ -1,20 +1,25 @@
 #include "philosophers.h"
 
-void think(t_philo *philo, bool before_sim);
+void think(t_philo *philo);
 
-//note to tmrw last meal time isnt being updated properly
+// void de_synchronise(t_philo *philo)
+// {
+//     if (philo->table->philo_number % 2 == 0)
+//     {
+//         // long delay = (30 * 50) / philo->table->philo_number;
+//         // if (delay < 50)
+//         //     delay = 50;
+//         // precise_usleep(delay);
+//         precise_usleep(50);
+//     }
+//     else
+//         think(philo);
+// }
 
-void de_synchronise(t_philo *philo)
+void	sim_start_delay(time_t start_time)
 {
-    if (philo->table->philo_number % 2 == 0)
-    {
-        long delay = (3e4 * 50) / philo->table->philo_number;
-        if (delay < 5e3)
-            delay = 5e3;
-        precise_usleep(delay, philo->table);
-    }
-    else
-        think(philo, true);
+	while (get_time_milli() < start_time)
+		continue ;
 }
 
 void wait_all_threads(t_table *table)
@@ -36,23 +41,11 @@ void *loner (void *data)
     return NULL;
 }
 
-void think (t_philo *philo, bool before_sim)
+void think (t_philo *philo)
 {
-    long t_eat;
-    long t_sleep;
-    long t_think;
-
-    if (before_sim)
-        print_status(THINKING, philo);
-    // if (philo->table->philo_number % 2 == 0)
-    //     return;
-    t_eat = philo->table->time_to_eat;
-    t_sleep = philo->table->time_to_sleep;
-    t_think = t_eat * 2 - t_sleep;
-    if (t_think < 0)
-        t_think = 0;
-    precise_usleep(t_think * 0.50, philo->table);
-    
+    print_status(THINKING, philo);
+    return;
+    // precise_usleep((philo->table->time_to_eat - philo->table->time_to_sleep * 2) * 42);   
 }
 
 void eat(t_philo *philo)
@@ -62,7 +55,6 @@ void eat(t_philo *philo)
     pthread_mutex_lock(&philo->second_fork->fork);
     print_status(TAKE_SECOND_FORK, philo);
 
-    //update last meal time
     set_long(&philo->philo_mutx, &philo->last_meal_time, get_time_milli());
     if (!simulation_ended(philo->table))
     {
@@ -71,7 +63,7 @@ void eat(t_philo *philo)
     }
 
     print_status(EATING, philo);
-    precise_usleep(philo->table->time_to_eat, philo->table);
+    precise_usleep(philo->table->time_to_eat);
     if (philo->table->num_of_meals > 0 && philo->meal_counter == philo->table->num_of_meals)
     {
         set_bool(&philo->philo_mutx, &philo->full, true);
@@ -86,17 +78,24 @@ void *dinner_simulation (void *data)
 
     wait_all_threads(philo->table);
 
-    set_long(&philo->philo_mutx, &philo->last_meal_time, get_time_milli());
+    sim_start_delay(philo->table->start_of_simulation);
+
+    pthread_mutex_lock(&philo->philo_mutx);
+    philo->last_meal_time = get_time_milli();
+    pthread_mutex_unlock(&philo->philo_mutx);
 
     increment_long(&philo->table->table_mutx, &philo->table->threads_running_count);
 
-    set_long(&philo->philo_mutx, &philo->table->start_of_simulation, get_time_milli());
-    while (!simulation_ended(philo->table))
+
+    set_long(&philo->table->table_mutx, &philo->table->start_of_simulation, get_time_milli());
+    while (1)
     {
         eat(philo);
         print_status(SLEEPING, philo);
-        precise_usleep(philo->table->time_to_sleep, philo->table);
-        think(philo, false);
+        precise_usleep(philo->table->time_to_sleep);
+        think(philo);
+        if(simulation_ended(philo->table))
+            return (NULL);
     }
     return NULL;
 }
@@ -104,6 +103,7 @@ void *dinner_simulation (void *data)
 void start_dinner (t_table *table)
 {
     int i = 0;
+        set_long(&table->table_mutx, &table->start_of_simulation, get_time_milli());
     if (table->num_of_meals == 0)
         return;
     else if (table->philo_number == 1)
@@ -116,8 +116,7 @@ void start_dinner (t_table *table)
             i++;
         }
     }
-    de_synchronise(table->philos);
-    //monitor
+    // de_synchronise(table->philos);
     pthread_create(&table->monitor, NULL, monitor_dinner, table);
     set_bool(&table->table_mutx, &table->ready_to_sync, true);
     i = 0;
@@ -131,18 +130,18 @@ void start_dinner (t_table *table)
     set_bool(&table->table_mutx, &table->end_of_simulation, true);
 }
 
-void assign_forks (t_philo *philo, t_fork *fork, int position)
+void assign_forks(t_philo *philo, t_fork *fork, int position)
 {
-    philo->first_fork = &fork[(position + 1) % philo->table->philo_number];//left
-    philo->second_fork = &fork[position];//right
+    philo->first_fork = &fork[position];
+    philo->second_fork = &fork[(position + 1 )% philo->table->philo_number];
     if (philo->id % 2 == 0)
     {
-        philo->first_fork = &fork[position]; // right
-        philo->second_fork = &fork[(position + 1) % philo->table->philo_number];// left
+        philo->first_fork = &fork[(position + 1 )% philo->table->philo_number];
+        philo->second_fork = &fork[position];
     }
 }
 
-void philo_init(t_table *table)
+void init_philo(t_table *table)
 {
     int i = 0;
     t_philo *philo;
@@ -176,7 +175,7 @@ void init_table(t_table *table)
         table->forks[i].id = i;
         i++;
     }
-    philo_init (table);
+    init_philo (table);
 }
 
 void fill_table (t_table *table, int ac, char **av)
@@ -192,10 +191,10 @@ void fill_table (t_table *table, int ac, char **av)
         i++;
     }
     table->philo_number = ft_atol(av[1]);
-    table->time_to_die = ft_atol(av[2]) * 1e3;
-    table->time_to_eat =ft_atol(av[3]) * 1e3;
-    table->time_to_sleep = ft_atol(av[4]) * 1e3;
-    if (table->time_to_die < 6e4 || table->time_to_eat < 6e4 || table->time_to_sleep < 6e4)
+    table->time_to_die = ft_atol(av[2]);
+    table->time_to_eat =ft_atol(av[3]);
+    table->time_to_sleep = ft_atol(av[4]);
+    if (table->time_to_die < 60 || table->time_to_eat < 60 || table->time_to_sleep < 60)
     {
         printf ("use values larger than 60ms\n");
         exit(EXIT_FAILURE);

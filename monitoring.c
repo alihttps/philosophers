@@ -20,9 +20,11 @@ bool philo_died(t_philo *philo)
         return false;
     }
 
+    pthread_mutex_lock(&philo->philo_mutx);
     elapsed = get_time_milli() - get_long(&philo->philo_mutx, &philo->last_meal_time);
-    
-    if (elapsed > (philo->table->time_to_die / 1e3))
+    printf ("elapsed %ld\n",elapsed);
+    pthread_mutex_unlock(&philo->philo_mutx);
+    if (elapsed >= (philo->table->time_to_die))
         return true;
     return false;
 }
@@ -37,6 +39,7 @@ void *monitor_dinner(void *data)
     ;
     while (!simulation_ended(table))
     {
+        usleep(100);
         i = 0;
         while (i < table->philo_number && !simulation_ended(table))
         {
@@ -47,8 +50,6 @@ void *monitor_dinner(void *data)
             }
             if (table->num_of_meals > 0 && table->full_count == table->philo_number)
             {
-                // printf ("num of meals ----> %ld\n", table->num_of_meals);
-                // printf ("full count ------> %ld\n", table->full_count);
                 set_bool(&table->table_mutx, &table->end_of_simulation, true);
             }
             i++; 
