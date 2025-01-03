@@ -8,6 +8,7 @@
 #include <sys/time.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 
 typedef struct s_table t_table;
 
@@ -30,14 +31,13 @@ typedef struct s_fork
 
 typedef struct s_philo
 {
-    int id;
-    long meal_counter;
-    bool full;
-    long last_meal_time;
+    atomic_int id;
+    atomic_long meal_counter;
+    atomic_bool full;
+    atomic_long last_meal_time;
     pthread_mutex_t philo_mutx;
     t_fork *first_fork;
     t_fork *second_fork;
-    // forks[number philo];
     pthread_t thread_id;
     t_table *table;
 
@@ -45,16 +45,16 @@ typedef struct s_philo
 
 typedef struct s_table
 {
-    long full_count;
-    long num_of_meals;
-    long philo_number;
-    long time_to_die;
-    long time_to_eat;
-    long time_to_sleep;
-    long start_of_simulation;
-    bool ready_to_sync;
-    bool end_of_simulation;
-    long threads_running_count;
+    atomic_long full_count;
+    atomic_long num_of_meals;
+    atomic_long philo_number;
+    atomic_long time_to_die;
+    atomic_long time_to_eat;
+    atomic_long time_to_sleep;
+    atomic_long start_of_simulation;
+    atomic_bool ready_to_sync;
+    atomic_bool end_of_simulation;
+    atomic_long threads_running_count;
     pthread_t monitor;
     pthread_mutex_t table_mutx;
     pthread_mutex_t write_mutx;
