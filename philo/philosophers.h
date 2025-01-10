@@ -6,7 +6,7 @@
 /*   By: aait-bou <aait-bou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/07 06:46:06 by aait-bou          #+#    #+#             */
-/*   Updated: 2025/01/07 22:41:01 by aait-bou         ###   ########.fr       */
+/*   Updated: 2025/01/10 19:48:15 by aait-bou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ typedef struct s_table
 
 void					parse_input(char **av);
 
-void					fill_table(t_table *table, int ac, char **av);
+void					fill_table(t_table *table, char **av);
 
 void					init_table(t_table *table);
 

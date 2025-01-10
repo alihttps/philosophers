@@ -6,7 +6,7 @@
 /*   By: aait-bou <aait-bou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/07 06:46:02 by aait-bou          #+#    #+#             */
-/*   Updated: 2025/01/07 21:58:06 by aait-bou         ###   ########.fr       */
+/*   Updated: 2025/01/10 19:47:34 by aait-bou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ bool	valid_input(int ac, char **av)
 			return (printf("invalid number of philos\n"), false);
 		if (!digits_only(av[i]))
 			return (printf("only digits\n"), false);
-		if ((i > 1 && i <= 4) && ft_atol(av[i]) <= 60)
+		if ((i > 1 && i <= 4) && ft_atol(av[i]) < 60)
 			return (printf("use values larger than 60ms\n"), false);
 		i++;
 	}

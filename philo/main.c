@@ -6,7 +6,7 @@
 /*   By: aait-bou <aait-bou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/07 06:45:55 by aait-bou          #+#    #+#             */
-/*   Updated: 2025/01/07 22:29:48 by aait-bou         ###   ########.fr       */
+/*   Updated: 2025/01/10 19:48:07 by aait-bou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ int	main(int ac, char **av)
 	{
 		if (!valid_input(ac, av))
 			return (EXIT_FAILURE);
-		fill_table(&table, ac, av);
+		fill_table(&table, av);
 		init_table(&table);
 		start_dinner(&table);
 		i = 0;

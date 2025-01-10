@@ -6,7 +6,7 @@
 /*   By: aait-bou <aait-bou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/07 06:45:52 by aait-bou          #+#    #+#             */
-/*   Updated: 2025/01/07 22:28:19 by aait-bou         ###   ########.fr       */
+/*   Updated: 2025/01/10 19:48:35 by aait-bou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,20 +65,8 @@ void	init_table(t_table *table)
 	init_philo(table);
 }
 
-void	fill_table(t_table *table, int ac, char **av)
+void	fill_table(t_table *table, char **av)
 {
-	int	i;
-
-	i = 1;
-	while (i < ac)
-	{
-		if (ft_atol(av[i]) < 0)
-		{
-			printf("not a valid value\n");
-			return ;
-		}
-		i++;
-	}
 	table->philo_number = ft_atol(av[1]);
 	table->time_to_die = ft_atol(av[2]);
 	table->time_to_eat = ft_atol(av[3]);
